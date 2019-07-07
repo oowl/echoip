@@ -29,7 +29,7 @@ fn echoip(req: Request<Body>) -> BoxFut {
 }
 
 fn main() {
-    let addr = "127.0.0.1:1337".parse().unwrap();
+    let addr = "0.0.0.0:1337".parse().unwrap();
     let server = Server::bind(&addr)
             .serve(|| service_fn(echoip))
             .map_err(|e| eprintln!("server error: {}",e));
