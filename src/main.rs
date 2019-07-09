@@ -71,7 +71,6 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
             } else if &url_path[..4] == "/bt/" && RE.is_match(&url_path[4..]){
                 match RE.captures(&url_path[4..]) {
                     Some(ip) => {
-                        dbg!(&ip);
                         let ip_str = ip.get(0).map(|m| m.as_str().to_string()).unwrap();
                         btapi::bt_api(req, ip_str)
                         },

@@ -79,7 +79,7 @@ pub fn bt_api(req: Request<Body>, remote_addr: String) -> ResponseFuture {
                     let data: Btdata = serde_json::from_slice(&b).unwrap();
                     let ip_data = Ipdata::new(data);
                     let address = ip_data.l1 + " " + &ip_data.l2 + " " + &ip_data.l3;
-                    info!("ip: {},address: {}",ip,address);
+                    info!("ip: {:15},address: {:10},isp: {:8}",ip,address,ip_data.isp);
                     if req_useragent.contains("Gecko") {
                         Chunk::from(format!(
                             "IP     : {}</br>AS号码 : {}</br>地址   ：{}</br>运营商 : {}</br>",
