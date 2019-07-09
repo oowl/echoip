@@ -53,8 +53,8 @@ impl Ipdata {
     }
 }
 
-pub fn bt_api(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
-    let ip  = http::Ipfromrequerst(&req, &remote_addr).unwrap();
+pub fn bt_api(req: Request<Body>, remote_addr: String) -> ResponseFuture {
+    let ip  = http::Ipfromrequerst(&req, remote_addr).unwrap();
     // dbg!(&ip);
     let url = format!(
         "http://btapi.ipip.net/host/info?ip={}&host=&lang={}",
