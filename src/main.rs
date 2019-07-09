@@ -7,7 +7,7 @@ use serde_json;
 
 use serde::{Serialize, Deserialize};
 
-
+use std::env;
 use pretty_env_logger;
 use std::net::SocketAddr;
 
@@ -22,7 +22,7 @@ type ResponseFuture = Box<dyn Future<Item = Response<Body>, Error = GenericError
 
 fn index_get(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
     let mut response = Response::new(Body::empty());
-    let ip = http::Ipfromrequerst(req, &remote_addr).unwrap();
+    let ip = http::Ipfromrequerst(&req, &remote_addr).unwrap();
     *response.body_mut() = Body::from(ip);
     Box::new(future::ok(response))
 }
@@ -49,7 +49,9 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
 
 fn main() {
     pretty_env_logger::init();
-    let addr = "0.0.0.0:1337".parse().unwrap();
+    let args: Vec<String> = env::args().collect();
+    let addr_str = &args[1];
+    let addr = addr_str.parse().unwrap();
     let make_ser = make_service_fn(|conn: &AddrStream| {
         let remote_addr = conn.remote_addr();
         service_fn(move |req: Request<Body>| echoip(req, remote_addr))
