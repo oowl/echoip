@@ -1,4 +1,5 @@
 use futures::{future, Future, Stream};
+use futures::future::FutureResult;
 use hyper::server::conn::AddrStream;
 use hyper::service::{make_service_fn, service_fn, service_fn_ok};
 use hyper::{header, Body, Chunk, Method, StatusCode, Uri};
@@ -18,14 +19,15 @@ static AE: &str = "gzip";
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type ResponseFuture = Box<dyn Future<Item = Response<Body>, Error = GenericError> + Send>;
 
+
 #[derive(Serialize, Deserialize, Debug,Clone)]
-struct Btdata {
+pub struct Btdata {
     r#as : String,
     area: String
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Ipdata {
+pub struct Ipdata {
     as_num: String,
     l1: String,
     l2: String,
@@ -37,7 +39,7 @@ struct Ipdata {
 }
 
 impl Ipdata {
-    fn new(bt: Btdata) -> Ipdata {
+    pub fn new(bt: Btdata) -> Ipdata {
         let as_num = bt.r#as;
         let area: Vec<&str> = bt.area.split("\t").collect();
         Ipdata {
@@ -51,6 +53,23 @@ impl Ipdata {
             lng: area[6].to_string(),
         }
     }
+}
+
+pub fn bt_api_req(ip_addr: String) -> ResponseFuture {
+   let url = format!(
+        "http://btapi.ipip.net/host/info?ip={}&host=&lang={}",
+        &ip_addr, "cn"
+    );
+    let bt_url = url.parse::<Uri>().unwrap();
+    // dbg!(&bt_url);
+    let req = Request::builder()
+        .method(Method::GET)
+        .uri(bt_url)
+        .header(header::USER_AGENT, UA)
+        .body(Body::empty())
+        .unwrap();
+    let client = Client::new();
+    Box::new(client.request(req).from_err())
 }
 
 pub fn bt_api(req: Request<Body>, remote_addr: String) -> ResponseFuture {

@@ -16,6 +16,7 @@ use std::net::SocketAddr;
 mod http;
 mod types;
 mod btapi;
+mod index;
 
 
 
@@ -60,10 +61,7 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
     }
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/") => index_get(req, ip_addr),
-        (&Method::POST, "/") => {
-            *response.body_mut() = req.into_body();
-            Box::new(future::ok(response))
-        },
+        (&Method::POST, "/") => index::index_post(req,ip_addr),
         (&Method::GET, _) if req.uri().path().starts_with("/bt")=> {
             let url_path = req.uri().path();
             if url_path == "/bt" || url_path == "/bt/" {
