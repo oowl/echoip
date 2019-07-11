@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title>what's your ip?</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="description" content="查IP(ip.stdin.in)网站, 提供免费的IP查询服务,命令行查询IP"/>
+		<meta name="keywords" content="IP, 查IP, IP查询"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta content="width=device-width,initial-scale=1" name="viewport">
+		<link href="./style.css" rel="stylesheet" />
+		<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+		<script>
+			var submit_sync = function(ip) {  
+				$.ajax({  
+					type: "POST",  
+					url: 'http://ip.stdin.in',  
+					async: false, // 使用同步方式  
+					// 1 需要使用JSON.stringify 否则格式为 a=2&b=3&now=14...  
+					// 2 需要强制类型转换，否则格式为 {"a":"2","b":"3"}  
+					data: JSON.stringify({                    
+						ip: ip,  
+						service: "bt"
+					}),  
+					contentType: "application/json; charset=utf-8",  
+					dataType: "json",  
+					success: function(data) {  
+						console.log(data)
+						value =  data
+					} // 注意不要在此行增加逗号  
+				});  
+				return value
+			}
+			$(document).ready(function(){
+  				$("#data-submit").click(function(){
+					var ip = $("#data-input").val()
+					console.log(ip)
+					var data = submit_sync(ip)
+					console.log(data.l1)
+					var ip_addr = data.ip
+					var address = data.l1 + " " + data.l2 + " " + data.l3
+						var isp = data.isp
+						$('pre').html('<div class="well"><p>IP         :   <code>'+ip_addr+'</code></p><p>地址     :  <code>'+address+'</code></p><p>运营商 :  '+isp+'</p></div>');
+  				});
+				$(function() {
+					var ip = $("#data-input").val()
+					console.log(ip)
+					var data = submit_sync(ip)
+					console.log(data.l1)
+					var ip_addr = data.ip
+					var address = data.l1 + " " + data.l2 + " " + data.l3
+						var isp = data.isp
+						$('pre').html('<div class="well"><p>IP         :   <code>'+ip_addr+'</code></p><p>地址     :  <code>'+address+'</code></p><p>运营商 :  '+isp+'</p></div>');
+  				})
+			});
+		</script>
+	</head>
+	<body>
+
+<div class="wrapper">
+	<div class="page">
+		<div class="logo">
+			<h1>
+				<a title="手机, 命令行IP查询"><img src="./morty-icon.png"></a>
+			</h1>
+		</div>
+		<div class="search">
+				<table>
+					<tbody>
+					<tr>
+						<td style=" width: 75%; " >
+					<input id="data-input" placeholder="请输入要查询的 IP 地址" size="26" type="text"  />
+						</td>
+						<td>
+					<button id="data-submit" type="submit" class="kq-button">查询</button>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+		</div>
+		<div class="data kq-well">
+				<pre class="result"></pre>
+		</div>
+		<div class="kq-well">
+			<div class="sys-cmd">
+				<ul>
+					<li>
+						<span><code>curl ip.stdin.in</code></span>
+					</li>
+				</ul>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+</body>
+</html>
