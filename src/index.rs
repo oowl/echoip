@@ -13,6 +13,7 @@ use serde::{Serialize, Deserialize};
 use futures::future::IntoFuture;
 
 use crate::btapi;
+use crate::http;
 
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type ResponseFuture = Box<dyn Future<Item = Response<Body>, Error = GenericError> + Send>;
@@ -27,15 +28,13 @@ pub fn index_post(req: Request<Body>, remote_addr: String) -> ResponseFuture {
     Box::new(req.into_body()
         .concat2() 
         .from_err()
-        .and_then(|entire_body| {
+        .and_then(move |entire_body| {
             let str = String::from_utf8(entire_body.to_vec()).unwrap();
-            let mut data : Mtrdata = serde_json::from_str(&str).map_err(move |e| {
-                error!("error json post from : {}",remote_addr);
-                e
-            }).unwrap();
+            let mut data : Mtrdata = serde_json::from_str(&str).unwrap();
+            info!("ip: {:15} post / ,data: {} {},",&remote_addr,data.service,data.ip);
             let res: ResponseFuture = match data.service.as_ref() {
                 "bt" => {
-                    box(btapi::bt_api_req(data.ip).map(move |web_res| {
+                    Box::new(btapi::bt_api_req(&data.ip).map(move |web_res| {
                         let body = Body::wrap_stream(web_res.into_body().map(move |b| {
                             let data: btapi::Btdata = serde_json::from_slice(&b).unwrap();
                             let ip_data = btapi::Ipdata::new(data);
@@ -53,11 +52,33 @@ pub fn index_post(req: Request<Body>, remote_addr: String) -> ResponseFuture {
                         let response = Response::builder()
                             .status(StatusCode::NOT_FOUND)
                             .body(Body::empty()).unwrap();
-                        box(future::ok(response))
+                        Box::new(future::ok(response))
                 }
             };
             res
 
+        })
+    )
+}
+
+
+pub fn index_get(req: Request<Body>, remote_addr: String) -> ResponseFuture {
+    Box::new(btapi::bt_api_req(&remote_addr).map(|web_res| {
+        Body::wrap_stream(web_res.into_body().map(move |b| {
+            let data: btapi::Btdata = serde_json::from_slice(&b).unwrap();
+            let ip_data = btapi::Ipdata::new(data);
+            let address = ip_data.l1 + " " + &ip_data.l2 + " " + &ip_data.l3;
+            Chunk::from(format!(
+                "btapi :\n\nIP     : {}\nAS号码 : {}\n地址   ：{}\n运营商 : {}\n",
+                remote_addr,ip_data.as_num,address,ip_data.isp
+            ))
+        }))
+    }).and_then(move |chunk| {
+        let response = Response::builder()
+            .status(StatusCode::OK)
+            .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+            .body(chunk).unwrap();
+        Box::new(future::ok(response))
         })
     )
 }

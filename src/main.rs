@@ -1,5 +1,3 @@
-#![feature(box_syntax)]
-
 use futures::{future, Future, Stream};
 use hyper::server::conn::AddrStream;
 use hyper::service::{make_service_fn, service_fn, service_fn_ok};
@@ -25,12 +23,6 @@ mod index;
 type GenericError = Box<dyn std::error::Error + Send + Sync>;
 type ResponseFuture = Box<dyn Future<Item = Response<Body>, Error = GenericError> + Send>;
 
-fn index_get(req: Request<Body>, remote_addr: String) -> ResponseFuture {
-    let mut response = Response::new(Body::empty());
-    let ip = http::Ipfromrequerst(&req, remote_addr).unwrap();
-    *response.body_mut() = Body::from(ip);
-    Box::new(future::ok(response))
-}
 
 
 
@@ -62,16 +54,16 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
             |1{0,1}[0-9]){0,1}[0-9]))$").unwrap();
     }
     match (req.method(), req.uri().path()) {
-        (&Method::GET, "/") => index_get(req, ip_addr),
-        (&Method::POST, "/") => index::index_post(req,ip_addr),
         (&Method::GET, _) if req.uri().path().starts_with("/bt")=> {
             let url_path = req.uri().path();
             if url_path == "/bt" || url_path == "/bt/" {
+                info!("ip: {:15} get /bt ",&remote_addr.ip());
                 btapi::bt_api(req, ip_addr)
             } else if &url_path[..4] == "/bt/" && RE.is_match(&url_path[4..]){
                 match RE.captures(&url_path[4..]) {
                     Some(ip) => {
                         let ip_str = ip.get(0).map(|m| m.as_str().to_string()).unwrap();
+                        info!("ip: {:15} get /bt/{} ",&remote_addr.ip(),ip_str);
                         btapi::bt_api(req, ip_str)
                         },
                     None => {
@@ -87,6 +79,32 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
                 Box::new(future::ok(response))
             }
         },
+        (&Method::GET, _) if !req.uri().path()[1..].contains("/") => {
+            let url_path = req.uri().path();
+            if url_path == "/" {
+                info!("ip: {:15} get / ",&remote_addr.ip());
+                index::index_get(req, ip_addr)
+            } else if &url_path[..1] == "/" && RE.is_match(&url_path[1..]){
+                match RE.captures(&url_path[1..]) {
+                    Some(ip) => {
+                        let ip_str = ip.get(0).map(|m| m.as_str().to_string()).unwrap();
+                        info!("ip: {:15} get /{} ",&remote_addr.ip(),ip_str);
+                        index::index_get(req, ip_str)
+                        },
+                    None => {
+                        dbg!(url_path[..4].to_string());
+                        info!("can not re /<ip>");
+                        *response.status_mut() = StatusCode::NOT_FOUND;
+                        Box::new(future::ok(response))
+                    }
+                }
+            } else {
+                info!("can not input /*");
+                *response.status_mut() = StatusCode::NOT_FOUND;
+                Box::new(future::ok(response))
+            }
+        },
+        (&Method::POST, "/") => index::index_post(req,ip_addr),
         _ => {
             *response.status_mut() = StatusCode::NOT_FOUND;
             Box::new(future::ok(response))

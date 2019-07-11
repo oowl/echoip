@@ -28,14 +28,14 @@ pub struct Btdata {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Ipdata {
-    as_num: String,
-    l1: String,
-    l2: String,
-    l3: String,
-    l4: String,
-    isp: String,
-    lat: String,
-    lng: String
+    pub as_num: String,
+    pub l1: String,
+    pub l2: String,
+    pub l3: String,
+    pub l4: String,
+    pub isp: String,
+    pub lat: String,
+    pub lng: String
 }
 
 impl Ipdata {
@@ -55,7 +55,7 @@ impl Ipdata {
     }
 }
 
-pub fn bt_api_req(ip_addr: String) -> ResponseFuture {
+pub fn bt_api_req(ip_addr: &str) -> ResponseFuture {
    let url = format!(
         "http://btapi.ipip.net/host/info?ip={}&host=&lang={}",
         &ip_addr, "cn"
@@ -71,6 +71,7 @@ pub fn bt_api_req(ip_addr: String) -> ResponseFuture {
     let client = Client::new();
     Box::new(client.request(req).from_err())
 }
+
 
 pub fn bt_api(req: Request<Body>, remote_addr: String) -> ResponseFuture {
     let ip  = http::Ipfromrequerst(&req, remote_addr).unwrap();
@@ -98,7 +99,7 @@ pub fn bt_api(req: Request<Body>, remote_addr: String) -> ResponseFuture {
                     let data: Btdata = serde_json::from_slice(&b).unwrap();
                     let ip_data = Ipdata::new(data);
                     let address = ip_data.l1 + " " + &ip_data.l2 + " " + &ip_data.l3;
-                    info!("ip: {:15},address: {:10},isp: {:8}",ip,address,ip_data.isp);
+                    // info!("ip: {:15},address: {:10},isp: {:8}",ip,address,ip_data.isp);
                     if req_useragent.contains("Gecko") {
                         Chunk::from(format!(
                             "IP     : {}</br>AS号码 : {}</br>地址   ：{}</br>运营商 : {}</br>",
