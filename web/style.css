@@ -51,6 +51,7 @@ table {
 
 #data-input {
     float: left;
+    padding-left: 10px;
     width: 100%;
     border: 1px #c7cad1 solid;
     background: #fff;
