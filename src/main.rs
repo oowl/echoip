@@ -58,7 +58,8 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
             let url_path = req.uri().path();
             if url_path == "/bt" || url_path == "/bt/" {
                 info!("ip: {:15} get /bt ",&remote_addr.ip());
-                btapi::bt_api(req, ip_addr)
+                let remote_addr = http::Ipfromrequerst(&req, ip_addr).unwrap();
+                btapi::bt_api(req, remote_addr)
             } else if &url_path[..4] == "/bt/" && RE.is_match(&url_path[4..]){
                 match RE.captures(&url_path[4..]) {
                     Some(ip) => {
@@ -83,7 +84,8 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
             let url_path = req.uri().path();
             if url_path == "/" {
                 info!("ip: {:15} get / ",&remote_addr.ip());
-                index::index_get(req, ip_addr)
+                let remote_addr = http::Ipfromrequerst(&req, ip_addr).unwrap();
+                index::index_get(req, remote_addr)
             } else if &url_path[..1] == "/" && RE.is_match(&url_path[1..]){
                 match RE.captures(&url_path[1..]) {
                     Some(ip) => {

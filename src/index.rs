@@ -25,7 +25,6 @@ struct Mtrdata {
 }
 
 pub fn index_post(req: Request<Body>, remote_addr: String) -> ResponseFuture {
-    let remote_addr = http::Ipfromrequerst(&req, remote_addr).unwrap();
     Box::new(req.into_body()
         .concat2() 
         .from_err()
@@ -69,7 +68,6 @@ pub fn index_post(req: Request<Body>, remote_addr: String) -> ResponseFuture {
 
 
 pub fn index_get(req: Request<Body>, remote_addr: String) -> ResponseFuture {
-    let remote_addr = http::Ipfromrequerst(&req, remote_addr).unwrap();
     Box::new(btapi::bt_api_req(&remote_addr).map(move |web_res| {
         Body::wrap_stream(web_res.into_body().map(move |b| {
             let data: btapi::Btdata = serde_json::from_slice(&b).unwrap();

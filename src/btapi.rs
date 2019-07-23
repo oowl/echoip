@@ -76,7 +76,7 @@ pub fn bt_api_req(ip_addr: &str) -> ResponseFuture {
 
 
 pub fn bt_api(req: Request<Body>, remote_addr: String) -> ResponseFuture {
-    let ip  = http::Ipfromrequerst(&req, remote_addr).unwrap();
+    let ip  = remote_addr;
     // dbg!(&ip);
     let url = format!(
         "http://btapi.ipip.net/host/info?ip={}&host=&lang={}",
