@@ -112,7 +112,10 @@ fn echoip(req: Request<Body>, remote_addr: SocketAddr) -> ResponseFuture {
             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_HEADERS, "Origin, X-Requested-With, Content-Type, Accept".parse().unwrap());
             Box::new(future::ok(response))
         },
-        (&Method::POST, "/") => index::index_post(req,ip_addr),
+        (&Method::POST, "/") => {
+            let remote_addr = http::Ipfromrequerst(&req, ip_addr).unwrap(); 
+            index::index_post(req,remote_addr)
+        },
         _ => {
             *response.status_mut() = StatusCode::NOT_FOUND;
             Box::new(future::ok(response))
